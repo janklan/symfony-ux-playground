@@ -32,6 +32,14 @@ class PostType extends AbstractType
                 'class' => Author::class
             ])
             ->add('ratingAllowed')
+
+            /**
+             * I'm adding the field here and removing it later if the data says rating !allowed. I tried the other way
+             * around too - adding it in the event listener instead.
+             *
+             * I also tried to add a hidden input here and then change it to the a NumberType in the listener, but that
+             * didn't work either.
+             */
             ->add('ratingValue')
         ;
 
