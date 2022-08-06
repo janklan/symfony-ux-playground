@@ -1,0 +1,26 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Posts{% endblock %}
+
+{% block body %}
+
+    {% for author in authors %}
+        <h1>{{ author }}</h1>
+        <table>
+        <tr>
+            <th>Post</th>
+            <th>Rating Allowed</th>
+            <th>Rating Value</th>
+        </tr>
+        {% for post in author.posts %}
+            <tr>
+                <td><a href="{{ path('edit', {id: post.id}) }}">{{ post }}</a></td>
+                <td>{{ post.ratingAllowed ? 'Yes' : 'No' }}</td>
+                <td>{{ post.ratingValue ?: '-' }}</td>
+            </tr>
+        {% endfor %}
+        </table>
+        <hr>
+    {% endfor %}
+    </table>
+{% endblock %}

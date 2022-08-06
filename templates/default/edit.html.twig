@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{% endblock %}
+
+{% block body %}
+
+    {{ component('post_form', {
+        post: post,
+        form: form
+    }) }}
+{% endblock %}
