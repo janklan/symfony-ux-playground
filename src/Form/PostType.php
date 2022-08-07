@@ -29,6 +29,17 @@ class PostType extends AbstractType
                 'required' => true,
                 'class' => Author::class
             ])
+
+            ->add('author2', EntityType::class, options: [
+                'mapped' => false,
+
+                'attr' => [
+                    'data-controller' => 'autocomplete',
+                ],
+                'required' => true,
+                'class' => Author::class
+            ])
+
             ->add('ratingAllowed')
         ;
 
@@ -50,7 +61,6 @@ class PostType extends AbstractType
         });
 
         $builder->get('ratingAllowed')->addEventListener(FormEvents::POST_SUBMIT, function (FormEvent $event) {
-
             /** @var bool $ratingAllowed */
             $ratingAllowed = $event->getForm()->getData();
             /** @var FormInterface $parentForm */
