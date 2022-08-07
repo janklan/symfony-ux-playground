@@ -6,8 +6,7 @@ Minimal working code examples to demonstrate things I'm talking about elsewhere 
 
 This app is supposed to demonstrate that the repeated rendering of forms in Symfony UX Live Component doesn't work well:
 
-1. The UX Live Component mechanism doesn't play well with UX Autocompleter: the autocompleter turns back to simple select on live reload
-2. The form structure does not change on live reloads: the `ratingValue` field should show up and disappear depending on the `ratingAllowed` checkbox state.
+The UX Live Component mechanism doesn't play well with UX Autocompleter: the autocompleter turns back to simple select on live reload
 
 *How to use:*
 

@@ -12,6 +12,7 @@ use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class PostType extends AbstractType
@@ -32,29 +33,28 @@ class PostType extends AbstractType
                 'class' => Author::class
             ])
             ->add('ratingAllowed')
-
-            /**
-             * I'm adding the field here and removing it later if the data says rating !allowed. I tried the other way
-             * around too - adding it in the event listener instead.
-             *
-             * I also tried to add a hidden input here and then change it to the a NumberType in the listener, but that
-             * didn't work either.
-             */
-            ->add('ratingValue')
         ;
 
+
+        /**
+         * Listening the PRE_SET_DATA alone is not enough to add the field on consecutive reloads - the POST_SUBMIT is
+         * the key.
+         *
+         * @see https://symfony.com/doc/current/form/dynamic_form_modification.html#dynamic-generation-for-submitted-forms
+         */
         $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event) {
             /** @var Post $post */
             $post = $event->getData();
             $form = $event->getForm();
 
-            /**
-             * This event clearly fires during the initial form rendering (the ratingValue is removed for for Post 1),
-             * but nothing happens on consecutive "Live reloads".
-             */
+            if ($post->isRatingAllowed()) {
+                $form->add('ratingValue');
+            }
+        });
 
-            if (!$post->isRatingAllowed()) {
-                $form->remove('ratingValue');
+        $builder->get('ratingAllowed')->addEventListener(FormEvents::POST_SUBMIT, function (FormEvent $event) {
+            if ($event->getForm()->getData()) {
+                $event->getForm()->getParent()->add('ratingValue');
             }
         });
     }
