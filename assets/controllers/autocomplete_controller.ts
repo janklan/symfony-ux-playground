@@ -21,7 +21,18 @@ export default class extends Controller {
     connect() {
         // this avoids initializing the same field twice (TomSelect shows an error otherwise)
         if (this.tomSelect) {
-            return;
+
+            // If the element already has the class, this indeed is a repeated initialisation attempt we need to stop.
+            if (this.element.classList.contains('tomselected')) {
+                return;
+            }
+
+            // The Stimulus Controller thinks Tom Select already exists, but the HTML markup doesn't look like it.
+            // This means "re-creating" the autocompleter doesn't really re-create it, and the browser won't complain.
+            // It also means the previous instance of Tom Select was not properly destroyed, so we'll do it now.
+            //
+            // @see https://github.com/symfony/ux/issues/407
+            this.tomSelect.destroy();
         }
 
         if (this.urlValue) {
