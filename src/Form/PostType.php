@@ -4,11 +4,8 @@ namespace App\Form;
 
 use App\Entity\Author;
 use App\Entity\Post;
-use App\Model\EntityDto\Task\TaskCreateDto;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
-use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
@@ -53,8 +50,18 @@ class PostType extends AbstractType
         });
 
         $builder->get('ratingAllowed')->addEventListener(FormEvents::POST_SUBMIT, function (FormEvent $event) {
-            if ($event->getForm()->getData()) {
-                $event->getForm()->getParent()->add('ratingValue');
+
+            /** @var bool $ratingAllowed */
+            $ratingAllowed = $event->getForm()->getData();
+            /** @var FormInterface $parentForm */
+            $parentForm = $event->getForm()->getParent();
+
+            if ($ratingAllowed) {
+                $parentForm->add('ratingValue');
+            } elseif ($parentForm->has('ratingValue')) {
+                // If the initial value was true, the field has been added during PRE_SET_DATA. If it was submitted as
+                // false (the user un-ticked the box), we have to remove that field.
+                $parentForm->remove('ratingValue');
             }
         });
     }

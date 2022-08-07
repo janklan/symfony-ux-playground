@@ -79,6 +79,11 @@ class Post implements \Stringable
     {
         $this->ratingAllowed = $ratingAllowed;
 
+        // We may have had some rating, but now we don't allow it anymore, so let's scrub the value
+        if (!$ratingAllowed) {
+            $this->setRatingValue(null);
+        }
+
         return $this;
     }
 
