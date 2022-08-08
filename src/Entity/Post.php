@@ -2,10 +2,14 @@
 
 namespace App\Entity;
 
+use App\Doctrine\Common\Collections\ReadOnlyCollection;
+use App\Dto\PostCreateDto;
+use App\Dto\PostUpdateDto;
 use App\Repository\PostRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: PostRepository::class)]
 class Post implements \Stringable
@@ -15,30 +19,30 @@ class Post implements \Stringable
     #[ORM\Column]
     private ?int $id = null;
 
-    #[Assert\NotBlank]
     #[ORM\Column(length: 255)]
-    private ?string $name = null;
+    private string $name;
 
     #[ORM\ManyToOne(inversedBy: 'posts')]
     #[ORM\JoinColumn(nullable: false)]
-    #[Assert\NotBlank]
-    private ?Author $author = null;
+    private Author $author;
 
     #[ORM\Column]
     private bool $ratingAllowed = false;
 
     #[ORM\Column(type: Types::SMALLINT, nullable: true)]
-    #[Assert\Range(min: 0, max: 3)]
     private ?int $ratingValue = null;
 
-    public function __construct(?string $name = null)
+    #[ORM\ManyToMany(targetEntity: Tag::class, inversedBy: 'posts')]
+    private Collection $tags;
+
+    private function __construct()
     {
-        $this->name = $name;
+        $this->tags = new ArrayCollection();
     }
 
     public function __toString(): string
     {
-        return $this->getName() ?? 'New Post';
+        return $this->getName();
     }
 
     public function getId(): ?int
@@ -46,28 +50,14 @@ class Post implements \Stringable
         return $this->id;
     }
 
-    public function getName(): ?string
+    public function getName(): string
     {
         return $this->name;
     }
 
-    public function setName(string $name): self
-    {
-        $this->name = $name;
-
-        return $this;
-    }
-
-    public function getAuthor(): ?Author
+    public function getAuthor(): Author
     {
         return $this->author;
-    }
-
-    public function setAuthor(?Author $author): self
-    {
-        $this->author = $author;
-
-        return $this;
     }
 
     public function isRatingAllowed(): bool
@@ -75,26 +65,41 @@ class Post implements \Stringable
         return $this->ratingAllowed;
     }
 
-    public function setRatingAllowed(bool $ratingAllowed): self
-    {
-        $this->ratingAllowed = $ratingAllowed;
-
-        // We may have had some rating, but now we don't allow it anymore, so let's scrub the value
-        if (!$ratingAllowed) {
-            $this->setRatingValue(null);
-        }
-
-        return $this;
-    }
-
     public function getRatingValue(): ?int
     {
         return $this->ratingValue;
     }
 
-    public function setRatingValue(?int $ratingValue): self
+    /**
+     * @return Collection<int, Tag>
+     */
+    public function getTags(): ReadOnlyCollection
     {
-        $this->ratingValue = $ratingValue;
+        return new ReadOnlyCollection($this->tags);
+    }
+
+    public static function create(PostCreateDto $dto): self
+    {
+        $self = new self;
+
+        $self->name = $dto->name;
+        $self->author = $dto->author;
+        $self->ratingAllowed = $dto->ratingAllowed;
+        $self->ratingValue = $self->ratingAllowed ? $dto->ratingValue : null;
+        $self->tags = new ArrayCollection($dto->tags);
+
+        return $self;
+    }
+
+    public function updateWith(PostUpdateDto $dto): self
+    {
+        $this->name = $dto->name;
+        $this->author = $dto->author;
+        $this->ratingAllowed = $dto->ratingAllowed;
+        $this->ratingValue = $this->ratingAllowed ? $dto->ratingValue : null;
+
+        // This is a bit dirty - normally you'd want to do a diff. The simple version is here just here for the demo
+        $this->tags = new ArrayCollection($dto->tags);
 
         return $this;
     }

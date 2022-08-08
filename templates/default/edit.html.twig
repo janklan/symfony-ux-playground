@@ -3,9 +3,32 @@
 {% block title %}{% endblock %}
 
 {% block body %}
+    <h1 class="border-b border-black text-xl font-bolder mb-3">Editing {{ post }} by {{ post.author }}</h1>
 
-    {{ component('post_form', {
-        post: post,
-        form: form
-    }) }}
+    {% for message in app.flashes('success') %}
+        <div class="bg-white border p-3 mb-1">
+            <strong>Flash message:</strong> {{ message }}
+        </div>
+    {% endfor %}
+
+    {% if app.request.get('standard') %}
+
+        <div class="bg-yellow-500 p-3 mb-3">
+            <p>You're looking at the <strong>standard version</strong> of the Edit form.</p>
+            <a href="{{ path('edit', {post: post.id}) }}" class="underline">Click here to see the LiveComponent version</a>
+        </div>
+
+        {{ block('form', 'components/post_form.html.twig') }}
+    {% else %}
+
+        <div class="bg-orange-500 p-3 mb-3">
+            <p>You're looking at the <strong>LiveComponent version</strong> of the Edit form.</p>
+            <a href="?standard=true" class="underline">Click here or disable JS to see the regular form.</a>
+        </div>
+
+        {{ component('post_form', {
+            dto,
+            form
+        }) }}
+    {% endif %}
 {% endblock %}

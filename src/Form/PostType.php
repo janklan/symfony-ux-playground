@@ -2,14 +2,21 @@
 
 namespace App\Form;
 
+use App\Dto\PostCreateDto;
+use App\Dto\PostUpdateDto;
 use App\Entity\Author;
 use App\Entity\Post;
+use App\Entity\Tag;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\CollectionType;
+use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\Form\FormInterface;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class PostType extends AbstractType
@@ -26,21 +33,31 @@ class PostType extends AbstractType
                  * Markup after live reload: <div><label for="post_author" class="required">Author</label><select id="post_author" name="post[author]" data-controller="symfony--ux-autocomplete--autocomplete" data-symfony--ux-autocomplete--autocomplete-no-results-found-text-value="No results found" data-symfony--ux-autocomplete--autocomplete-no-more-results-text-value="No more results" tabindex="0"><option value="1" selected="selected">Alice</option><option value="2">Bob</option></select></div>
                  */
                 'autocomplete' => true,
+                'block_prefix' => 'autocompleter',
                 'required' => true,
                 'class' => Author::class
             ])
 
             ->add('author2', EntityType::class, options: [
                 'mapped' => false,
-
                 'attr' => [
                     'data-controller' => 'autocomplete',
                 ],
-                'required' => true,
-                'class' => Author::class
+                'block_prefix' => 'autocompleter',
+                'required' => false,
+                'class' => Author::class,
+                'help' => 'This field is not mapped - it\'s here to demonstrate the custom autocompleter functionality',
             ])
-
-            ->add('ratingAllowed')
+            ->add('ratingAllowed', options: [
+                'help' => 'Ticking this box will enable ratingValue field and vice versa. <strong>LiveComponent makes this automated</strong>, the standard form needs to be submitted.',
+                'help_html' => true,
+            ])
+            ->add('tags', EntityType::class, options: [
+                'class' => Tag::class,
+                'multiple' => true,
+                'expanded' => true,
+                'priority' => -1
+            ])
         ;
 
 
@@ -51,11 +68,11 @@ class PostType extends AbstractType
          * @see https://symfony.com/doc/current/form/dynamic_form_modification.html#dynamic-generation-for-submitted-forms
          */
         $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event) {
-            /** @var Post $post */
-            $post = $event->getData();
+            /** @var PostCreateDto|PostUpdateDto $dto */
+            $dto = $event->getData();
             $form = $event->getForm();
 
-            if ($post->isRatingAllowed()) {
+            if ($dto->ratingAllowed) {
                 $form->add('ratingValue');
             }
         });
@@ -71,7 +88,10 @@ class PostType extends AbstractType
             } elseif ($parentForm->has('ratingValue')) {
                 // If the initial value was true, the field has been added during PRE_SET_DATA. If it was submitted as
                 // false (the user un-ticked the box), we have to remove that field.
-                $parentForm->remove('ratingValue');
+                //
+                // Instead of removing, we're replacing with a hidden field to avoid "post: This form should not contain extra fields."
+                // error. I don't wanted to enable `allow_extra_fields` as I consider it a security risk.
+                $parentForm->remove('ratingValue')->add('ratingValue', HiddenType::class);
             }
         });
     }
@@ -79,7 +99,8 @@ class PostType extends AbstractType
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'data_class' => Post::class,
+            'data_class' => PostCreateDto::class,
+            'method' => Request::METHOD_POST,
             'attr' => ['novalidate' => true]
         ]);
     }

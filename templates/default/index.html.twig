@@ -14,9 +14,11 @@
         </tr>
         {% for post in author.posts %}
             <tr>
-                <td><a href="{{ path('edit', {id: post.id}) }}">{{ post }}</a></td>
+                <td>{{ post }}</td>
                 <td>{{ post.ratingAllowed ? 'Yes' : 'No' }}</td>
                 <td>{{ post.ratingValue ?: '-' }}</td>
+                <td><a href="{{ path('edit', {post: post.id}) }}">Edit (live component)</a></td>
+                <td><a href="{{ path('edit', {post: post.id, standard: true}) }}">Edit (standard form)</a></td>
             </tr>
         {% endfor %}
         </table>

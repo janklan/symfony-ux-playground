@@ -2,14 +2,21 @@
 
 namespace App\Twig\Components;
 
+use App\Dto\PostCreateDto;
+use App\Dto\PostUpdateDto;
 use App\Entity\Post;
 use App\Form\PostType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
+use Symfony\UX\LiveComponent\Attribute\PostHydrate;
+use Symfony\UX\LiveComponent\Attribute\PreDehydrate;
+use Symfony\UX\LiveComponent\Attribute\PreReRender;
 use Symfony\UX\LiveComponent\ComponentWithFormTrait;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
+use Symfony\UX\TwigComponent\Attribute\PostMount;
+use Symfony\UX\TwigComponent\Attribute\PreMount;
 
 #[AsLiveComponent('post_form')]
 class PostFormComponent extends AbstractController
@@ -17,27 +24,56 @@ class PostFormComponent extends AbstractController
     use DefaultActionTrait;
     use ComponentWithFormTrait;
 
-    /**
-     * The initial data used to create the form.
-     *
-     * Needed so the same form can be re-created
-     * when the component is re-rendered via Ajax.
-     *
-     * The `fieldName` option is needed in this situation because
-     * the form renders fields with names like `name="post[title]"`.
-     * We set `fieldName: ''` so that this live prop doesn't collide
-     * with that data. The value - data - could be anything.
-     */
     #[LiveProp(fieldName: 'data')]
-    public ?Post $post = null;
+//    public ?PostUpdateDto $dto = null; // This would work, but I'm trying to build universal components where my DTO implement an interface.
+    public PostCreateDto|PostUpdateDto|null $dto;
 
-    /**
-     * Used to re-create the PostType form for re-rendering.
-     */
+    // This is only called on first component render anyway - not on reloads.
+    public function mount(array|PostCreateDto|PostUpdateDto $dto)
+    {
+        if (is_array($dto)) {
+            dd($dto);
+        }
+
+        $this->dto = $dto;
+    }
+
+    #[PreMount]
+    public function preMount(array $data): array
+    {
+        dump($data);
+        return $data;
+    }
+
+    #[PostMount]
+    public function postMount(array $data): array
+    {
+        dump($data);
+        return $data;
+    }
+
+    #[PostHydrate]
+    public function postHydrate() {
+        dd(func_get_args());
+    }
+
+    #[PreDehydrate]
+    public function preDehydrate() {
+        dump(func_get_args());
+    }
+
+    #[PreReRender]
+    public function preReRender() {
+        dump(func_get_args());
+    }
+
+
+
     protected function instantiateForm(): FormInterface
     {
-        dump($this->post);
         // we can extend AbstractController to get the normal shortcuts
-        return $this->createForm(PostType::class, $this->post);
+        return $this->createForm(PostType::class, $this->dto, [
+            'data_class' => $this->dto::class,
+        ]);
     }
 }

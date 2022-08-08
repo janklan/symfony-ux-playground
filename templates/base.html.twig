@@ -9,11 +9,13 @@
             {{ encore_entry_link_tags('app') }}
         {% endblock %}
 
+        <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+
         {% block javascripts %}
             {{ encore_entry_script_tags('app') }}
         {% endblock %}
     </head>
-    <body>
+    <body class="p-5">
         {% block body %}{% endblock %}
     </body>
 </html>

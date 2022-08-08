@@ -136,6 +136,7 @@
       <path value="$PROJECT_DIR$/vendor/symfony/ux-twig-component" />
       <path value="$PROJECT_DIR$/vendor/symfony/webpack-encore-bundle" />
       <path value="$PROJECT_DIR$/vendor/symfony/ux-autocomplete" />
+      <path value="$PROJECT_DIR$/vendor/twig/html-extra" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.1" />
